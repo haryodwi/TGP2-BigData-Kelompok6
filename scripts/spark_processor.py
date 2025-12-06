@@ -30,40 +30,65 @@ def get_sentiment(text):
 def get_brand_category(text):
     text_lower = str(text).lower()
     
-    # ADVANCED BRAND MAPPING (Regex)
+    # --- MAPPING AKURAT BERDASARKAN GAMBAR TABEL BAPAK ---
+    # Format: Regex Pattern : (Nama Brand, Kategori Industri)
     brand_map = {
-        r'\bapple\b': ('Apple', 'Technology'),
-        r'\biphone\b': ('Apple', 'Technology'),
-        r'\bipad\b': ('Apple', 'Technology'),
-        r'\bmacbook\b': ('Apple', 'Technology'),
-        r'@applesupport': ('Apple', 'Technology'),
-        r'\bsamsung\b': ('Samsung', 'Technology'),
-        r'\bgalaxy\b': ('Samsung', 'Technology'),
-        r'\bsony\b': ('Sony', 'Technology'),
-        r'\bplaystation\b': ('Sony', 'Technology'),
-        r'\bxbox\b': ('Microsoft', 'Technology'),
-        r'\bamazon\b': ('Amazon', 'Service'),
-        r'@amazonhelp': ('Amazon', 'Service'),
-        r'\btesco\b': ('Tesco', 'Retail'),
-        r'\bsainsbury': ('Sainsbury', 'Retail'),
-        r'\bspotify\b': ('Spotify', 'Service'),
-        r'\buber\b': ('Uber', 'Service'),
-        r'\bbritish\s*airways\b': ('British Airways', 'Service')
+        # 1. TEKNOLOGI & ELEKTRONIK
+        r'@applesupport|\bapple\b|\biphone\b|\bipad\b|\bmacbook\b': ('Apple', 'Technology'),
+        r'@google|\bgoogle\b|\bandroid\b': ('Google', 'Technology'),
+        
+        # 2. GAMING & KONSOL
+        r'@askplaystation|\bplaystation\b|\bps4\b|\bps5\b|\bsony\b': ('Sony', 'Gaming & Console'),
+        r'@xboxsupport|\bxbox\b|\bmicrosoft\b': ('Microsoft', 'Gaming & Console'),
+        
+        # 3. STREAMING & HIBURAN
+        r'@spotifycares|\bspotify\b': ('Spotify', 'Music & Video Streaming'),
+        r'@hulu_support|\bhulu\b': ('Hulu', 'Music & Video Streaming'),
+        
+        # 4. RITEL & E-COMMERCE
+        r'@amazonhelp|\bamazon\b|\bprime\b': ('Amazon', 'Retail & Supermarket'),
+        r'@tesco|\btesco\b': ('Tesco', 'Retail & Supermarket'),
+        r'@sainsburys|\bsainsbury': ('Sainsburys', 'Retail & Supermarket'),
+        
+        # 5. TELEKOMUNIKASI & INTERNET
+        r'@comcastcares|\bcomcast\b|\bxfinity\b': ('Comcast', 'Telecom & Internet'),
+        r'@tmobilehelp|\bt-mobile\b|\btmobile\b': ('T-Mobile', 'Telecom & Internet'),
+        r'@sprintcare|\bsprint\b': ('Sprint', 'Telecom & Internet'),
+        r'@ask_spectrum|\bspectrum\b': ('Spectrum', 'Telecom & Internet'),
+        
+        # 6. MASKAPAI PENERBANGAN (AIRLINES)
+        r'@americanair|\bamerican airlines\b': ('American Air', 'Airlines'),
+        r'@british_airways|\bbritish airways\b': ('British Airways', 'Airlines'),
+        r'@southwestair|\bsouthwest\b': ('Southwest', 'Airlines'),
+        r'@delta|\bdelta\b': ('Delta', 'Airlines'),
+        r'@virgintrains|\bvirgin\b': ('Virgin', 'Airlines'),
+        
+        # 7. TRANSPORTASI & LOGISTIK
+        r'@uber_support|\buber\b': ('Uber', 'Transportation & Logistics'),
+        r'@upshelp|\bups\b': ('UPS', 'Transportation & Logistics'),
+        
+        # 8. RESTORAN
+        r'@chipotletweets|\bchipotle\b': ('Chipotle', 'Food & Beverages')
     }
 
+    # Logika Pencocokan
     for pattern, info in brand_map.items():
         if re.search(pattern, text_lower):
             return [info[0], info[1]]
 
-    # Smart Fallback
-    if 'laptop' in text_lower or 'phone' in text_lower: return ["General Tech", "Technology"]
-    if 'chair' in text_lower or 'desk' in text_lower: return ["General Furniture", "Furniture"]
+    # Smart Fallback (Jika tidak ada brand spesifik disebut)
+    if 'phone' in text_lower or 'wifi' in text_lower or 'app' in text_lower: 
+        return ["General Tech", "Technology"]
+    if 'flight' in text_lower or 'plane' in text_lower or 'delay' in text_lower: 
+        return ["General Travel", "Airlines"]
+    if 'delivery' in text_lower or 'package' in text_lower: 
+        return ["General Service", "Logistics & Shipping"]
     
     return ["Unknown", "Uncategorized"]
 
 # --- SPARK CONFIG (SUPPORT MINIO/S3 + DELTA) ---
 spark = SparkSession.builder \
-    .appName("LakehouseEngineV3") \
+    .appName("LakehouseEngineV4_Final") \
     .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,org.postgresql:postgresql:42.6.0,io.delta:delta-spark_2.12:3.1.0,org.apache.hadoop:hadoop-aws:3.3.4") \
     .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
     .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
@@ -142,10 +167,8 @@ def write_pg(df, table):
     except Exception as e:
         print(f"❌ [ERROR] Failed writing to {table}: {e}")
 
-# Opsional: Jika ingin menulis ke MinIO (Delta Lake) di masa depan, gunakan format="delta" dan path="s3a://lakehouse/..."
-
 q1 = clean_sales.writeStream.foreachBatch(lambda df, id: write_pg(df, "fact_sales")).start()
 q2 = clean_tweets.writeStream.foreachBatch(lambda df, id: write_pg(df, "fact_tweets")).start()
 
-print(">>> ENGINE V3 (FULL ARCHITECTURE) STARTED <<<")
+print(">>> ENGINE V4 (FINAL ACCURACY) STARTED <<<")
 spark.streams.awaitAnyTermination()
