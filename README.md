@@ -62,13 +62,13 @@ Tunggu sekitar 2-5 menit hingga semua selesai download dan statusnya "Running".
 Copy-paste perintah ini ke terminal untuk menyiapkan Database dan Topik Kafka:
 
 
-# 1. Buat Database untuk Metabase
+##### 1. Buat Database untuk Metabase
 
 ```python
 docker compose exec postgres psql -U admin -d postgres -c "CREATE DATABASE metabase;"
 ```
 
-# 2. Buat Topik Kafka
+#####  2. Buat Topik Kafka
 
 ```python
 docker compose exec kafka /opt/kafka/bin/kafka-topics.sh --create --topic superstore_sales --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
