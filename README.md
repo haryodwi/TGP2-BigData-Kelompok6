@@ -120,9 +120,8 @@ docker compose exec kafka /opt/kafka/bin/kafka-topics.sh --create --topic custom
 5. Restore Dashboard Jadi 📊
 Agar kalian tidak perlu bikin grafik dari nol, restore konfigurasi dashboard yang sudah jadi:
 
-Bash
-
-cat metabase_dashboard.sql | docker compose exec -T postgres psql -U admin -d metabase
+''''
+cat metabase_dashboard.sql | docker compose exec -T postgres psql -U admin -d metabase''''
 (Catatan: Jika perintah cat tidak jalan di PowerShell Windows biasa, gunakan Git Bash atau Command Prompt).
 
 ▶️ Cara Menjalankan Program
