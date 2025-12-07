@@ -28,7 +28,7 @@ Sebelum memulai, pastikan laptop kalian sudah terinstall:
 Buka terminal/PowerShell di folder tujuan, lalu jalankan:
 
 ```python
-git clone [https://github.com/haryodwi/TGP2-BigData-Kelompok6.git](https://github.com/haryodwi/TGP2-BigData-Kelompok6.git)
+git clone https://github.com/haryodwi/TGP2-BigData-Kelompok6.git
 ```
 ```python
 cd TGP2-BigData-Kelompok6
