@@ -37,10 +37,9 @@ def get_sentiment(text):
 def get_brand_category(text):
     text_lower = str(text).lower()
     
-    # --- MAPPING V8 (HASHTAG SUPPORT + NEW KEYWORDS) ---
+    # --- MAPPING V8 (FINAL + DISCOUNT FIX) ---
     brand_map = {
         # 1. TEKNOLOGI
-        # Menambahkan support hashtag (#) dan keyword umum iOS
         r'[@#]?applesupport|[@#]?\bapple\b|\biphone\b|\bipad\b|\bmacbook\b|\bios\b|\bairpods\b': ('Apple', 'Technology'),
         r'[@#]?google|\bgoogle\b|\bandroid\b|\bpixel\b': ('Google', 'Technology'),
         r'[@#]?microsofthelps|\@office\w*|\@azuresupport|\bmicrosoft\b|\boffice365\b|\bexcel\b': ('Microsoft', 'Technology'),
@@ -65,7 +64,6 @@ def get_brand_category(text):
         r'[@#]?askrbc|\brbc\b': ('RBC', 'Banking & Financial'),
 
         # 3. RETAIL & E-COMMERCE
-        # Update: Support #amazon, #amazonuk, kindle, fire tv
         r'[@#]?amazon\w*|\bprime\b|\bkindle\b|\bfire\s*tv\s*stick\b': ('Amazon', 'Retail & E-commerce'),
         r'[@#]?askebay|\bebay\b': ('eBay', 'Retail & E-commerce'),
         r'[@#]?asktarget|\btarget\b': ('Target', 'Retail & E-commerce'),
@@ -98,7 +96,6 @@ def get_brand_category(text):
         r'[@#]?uscellularcares|\bus cellular\b': ('US Cellular', 'Telecom & Internet'),
 
         # 5. FOOD & BEVERAGES
-        # Update: Menambah UberEats & Generic Food Keywords
         r'[@#]?ubereats|\bubereats\b': ('Uber Eats', 'Food & Beverages'),
         r'[@#]?mcdonalds|\bmcdonalds\b|\bmcd\b': ('McDonalds', 'Food & Beverages'),
         r'[@#]?askpapajohns|\bpapa johns\b': ('Papa Johns', 'Food & Beverages'),
@@ -110,7 +107,6 @@ def get_brand_category(text):
         r'[@#]?tacobellteam|\btaco bell\b': ('Taco Bell', 'Food & Beverages'),
         r'[@#]?chipotletweets|\bchipotle\b': ('Chipotle', 'Food & Beverages'),
         r'[@#]?arbyscares|\barbys\b': ('Arbys', 'Food & Beverages'),
-        # Generic Food
         r'\blunch\b|\bdinner\b|\bbreakfast\b|\bmeal\b|\bsnack\b': ('General Food', 'Food & Beverages'),
         r'\bchicken\b|\bfried chicken\b|\bwings\b|\bnuggets\b': ('General Food', 'Food & Beverages'),
         r'\bpizza\b|\bpepperoni\b|\bparmesan\b|\bmozzarella\b': ('General Food', 'Food & Beverages'),
@@ -155,20 +151,14 @@ def get_brand_category(text):
             return [info[0], info[1]]
 
     # LOGIKA 2: Smart Fallback (Kontekstual)
-    # New Keywords: Car, Vehicle, Driver -> Transport
     if 'car' in text_lower or 'vehicle' in text_lower or 'driver' in text_lower:
         return ["General Transport", "Transportation"]
     if 'airline' in text_lower or 'boarded' in text_lower or 'flight' in text_lower: 
         return ["General Airline", "Transportation"]
-    
-    # New Keywords: LTE, Residential -> Telecom
     if 'lte' in text_lower or 'residential' in text_lower or 'wifi' in text_lower or 'internet' in text_lower or 'broadband' in text_lower:
         return ["General ISP", "Telecom & Internet"]
-    
-    # New Keyword: GPS -> Logistics (Asumsi tracking paket)
     if 'gps' in text_lower or 'delivery' in text_lower or 'package' in text_lower or 'parcel' in text_lower: 
         return ["General Courier", "Logistics & Shipping"]
-    
     if 'app' in text_lower or 'login' in text_lower or 'update' in text_lower:
         return ["General Tech", "Technology"]
     
@@ -176,7 +166,7 @@ def get_brand_category(text):
 
 # --- SPARK CONFIG ---
 spark = SparkSession.builder \
-    .appName("LakehouseEngineV8_Final") \
+    .appName("LakehouseEngineV8_Fixed") \
     .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,org.postgresql:postgresql:42.6.0,io.delta:delta-spark_2.12:3.1.0,org.apache.hadoop:hadoop-aws:3.3.4") \
     .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
     .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
@@ -199,7 +189,7 @@ df_sales = spark.readStream.format("kafka").option("kafka.bootstrap.servers", "k
 df_tweets = spark.readStream.format("kafka").option("kafka.bootstrap.servers", "kafka:9092").option("subscribe", "customer_tweets").option("startingOffsets", "earliest").load()
 
 # --- TRANSFORM ---
-# Skema Lengkap Sales
+# Skema Lengkap Sales (TERMASUK DISCOUNT)
 sales_schema = StructType() \
     .add("Order ID", StringType()) \
     .add("Order Date", StringType()) \
@@ -208,11 +198,14 @@ sales_schema = StructType() \
     .add("Sub-Category", StringType()) \
     .add("Sales", FloatType()) \
     .add("Quantity", IntegerType()) \
+    .add("Discount", FloatType()) \
     .add("Profit", FloatType()) \
     .add("State", StringType())
 
+# Update logic JSON parser
 clean_sales = df_sales.select(from_json(col("value").cast("string"), sales_schema).alias("data")).select("data.*").withColumn("gender_predicted", gender_udf(col("Customer Name"))).withColumn("parsed_date", to_date(col("Order Date"), "M/d/yyyy"))
 
+# ... (Sisanya sama) ...
 tweet_schema = StructType().add("tweet_id", StringType()).add("inbound", BooleanType()).add("created_at", StringType()).add("text", StringType())
 clean_tweets = df_tweets.select(from_json(col("value").cast("string"), tweet_schema).alias("data")).select("data.*").filter(col("inbound") == True).withColumn("sentiment_score", sentiment_udf(col("text"))).withColumn("brand_info", brand_udf(col("text"))).withColumn("brand", col("brand_info")[0]).withColumn("category", col("brand_info")[1]).withColumn("sentiment_label", when(col("sentiment_score") > 0, "Positive").when(col("sentiment_score") < 0, "Negative").otherwise("Neutral")).withColumn("parsed_date", to_timestamp(col("created_at"), "EEE MMM dd HH:mm:ss Z yyyy"))
 
@@ -227,5 +220,5 @@ def write_pg(df, table):
 q1 = clean_sales.writeStream.foreachBatch(lambda df, id: write_pg(df, "fact_sales")).start()
 q2 = clean_tweets.writeStream.foreachBatch(lambda df, id: write_pg(df, "fact_tweets")).start()
 
-print(">>> ENGINE V8 (HASHTAG SUPPORT + NEW KEYWORDS) STARTED <<<")
+print(">>> ENGINE V8 (FINAL + DISCOUNT FIX) STARTED <<<")
 spark.streams.awaitAnyTermination()
