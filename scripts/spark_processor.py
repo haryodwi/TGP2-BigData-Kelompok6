@@ -30,9 +30,10 @@ def get_sentiment(text):
 def get_brand_category(text):
     text_lower = str(text).lower()
     
-    # --- MAPPING V5 (FINAL COMPLETE) ---
+    # --- MAPPING V6 (FIXED TYPOS & JAPANESE SUPPORT) ---
     brand_map = {
         # 1. TEKNOLOGI & CONSUMER ELECTRONICS
+        # Note: 'ios' ditambahkan. 'amazon' dilonggarkan boundary-nya.
         r'@applesupport|\bapple\b|\biphone\b|\bipad\b|\bmacbook\b|\bios\b|\bairpods\b': ('Apple', 'Technology'),
         r'@google|\bgoogle\b|\bandroid\b|\bpixel\b': ('Google', 'Technology'),
         r'@microsofthelps|\@office\w*|\@azuresupport|\bmicrosoft\b|\boffice365\b|\bexcel\b': ('Microsoft', 'Technology'),
@@ -44,7 +45,7 @@ def get_brand_category(text):
         r'@asurioncares|\basurion\b': ('Asurion', 'Technology'),
         r'@airbnb|\bairbnb\b': ('Airbnb', 'Technology'),
 
-        # 2. BANKING & FINANCIAL SERVICES (NEW!)
+        # 2. BANKING & FINANCIAL SERVICES
         r'@askamex|\bamex\b|\bamerican express\b': ('American Express', 'Banking & Financial'),
         r'@askpaypal|\bpaypal\b': ('PayPal', 'Banking & Financial'),
         r'@chasesupport|\bchase\b|\bchase bank\b': ('Chase', 'Banking & Financial'),
@@ -53,8 +54,9 @@ def get_brand_category(text):
         r'@askciti|\bciti\b|\bcitibank\b': ('Citibank', 'Banking & Financial'),
 
         # 3. RETAIL & E-COMMERCE
-        r'@amazonhelp|\bamazon\b|\bprime\b|\bkindle\b|\bfire tv stick\b|\bamazonuk\b': ('Amazon', 'Retail & E-commerce'),
-        r'@askeBay|\bebay\b': ('eBay', 'Retail & E-commerce'),
+        # Fix: 'amazon' tanpa \b di belakang untuk menangkap suffix Jepang/UK, tambah kindle & fire tv
+        r'@amazonhelp|\bamazon\w*|\bprime\b|\bkindle\b|\bfire\s*tv\s*stick\b': ('Amazon', 'Retail & E-commerce'),
+        r'@askebay|\bebay\b': ('eBay', 'Retail & E-commerce'),
         r'@asktarget|\btarget\b': ('Target', 'Retail & E-commerce'),
         r'@walmart|\bwalmart\b': ('Walmart', 'Retail & E-commerce'),
         r'@tesco|\btesco\b': ('Tesco', 'Retail & E-commerce'),
@@ -92,6 +94,7 @@ def get_brand_category(text):
         r'@chipotletweets|\bchipotle\b': ('Chipotle', 'Food & Beverages'),
 
         # 6. TRANSPORTATION (AIRLINES & TRAINS & RIDE-HAILING)
+        # Fix: Tambah JetBlue
         r'@americanair|\bamerican airlines\b': ('American Air', 'Transportation'),
         r'@british_airways|\bbritish airways\b|\bba\b': ('British Airways', 'Transportation'),
         r'@southwestair|\bsouthwest\b': ('Southwest', 'Transportation'),
@@ -99,15 +102,17 @@ def get_brand_category(text):
         r'@alaskaair|\balaska airlines\b': ('Alaska Air', 'Transportation'),
         r'@virginatlantic|\bvirgin atlantic\b': ('Virgin Atlantic', 'Transportation'),
         r'@airasia\w*|\bairasia\b': ('AirAsia', 'Transportation'),
+        r'@jetblue|\bjetblue\b': ('JetBlue', 'Transportation'),
         r'@virgintrains|\bvirgin trains\b': ('Virgin Trains', 'Transportation'),
         r'@gwrhelp|\bgreat western railway\b': ('GWR', 'Transportation'),
         r'@sw_help|\bsouth western railway\b': ('SW Railway', 'Transportation'),
-        r'@nationalraileng|\bnational rail\b': ('National Rail', 'Transportation'),
+        # Fix: Typo nationalrailenq (q bukan g)
+        r'@nationalrailenq|\bnational rail\b': ('National Rail', 'Transportation'),
+	r'@nationalraileng|\bnationalrailenq\b': ('National Rail', 'Transportation'),
         r'@londonmidland|\blondon midland\b': ('London Midland', 'Transportation'),
-        r'@uber_support|\buber\b': ('Uber', 'Transportation'),
 
-        # 7. LOGISTICS & SHIPPING
-        r'@ubereats|\bubereats\b': ('Uber', 'Logistics & Shipping'),
+        # 7. LOGISTICS & RIDE-HAILING
+        r'@uber_support|\buber\b': ('Uber', 'Logistics & Shipping'),
         r'@upshelp|\bups\b': ('UPS', 'Logistics & Shipping'),
         r'@usps|\busps\b|\bpost office\b': ('USPS', 'Logistics & Shipping'),
         r'@fedex|\bfedex\b': ('FedEx', 'Logistics & Shipping'),
@@ -128,6 +133,7 @@ def get_brand_category(text):
             return [info[0], info[1]]
 
     # LOGIKA 2: Smart Fallback (Kontekstual)
+    # Fix: Tambah 'airline' dan 'boarded'
     if 'airline' in text_lower or 'boarded' in text_lower or 'flight' in text_lower: 
         return ["General Airline", "Transportation"]
     if 'wifi' in text_lower or 'internet' in text_lower or 'broadband' in text_lower:
@@ -141,7 +147,7 @@ def get_brand_category(text):
 
 # --- SPARK CONFIG ---
 spark = SparkSession.builder \
-    .appName("LakehouseEngineV5_Complete") \
+    .appName("LakehouseEngineV6_Final") \
     .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,org.postgresql:postgresql:42.6.0,io.delta:delta-spark_2.12:3.1.0,org.apache.hadoop:hadoop-aws:3.3.4") \
     .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
     .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
@@ -181,5 +187,5 @@ def write_pg(df, table):
 q1 = clean_sales.writeStream.foreachBatch(lambda df, id: write_pg(df, "fact_sales")).start()
 q2 = clean_tweets.writeStream.foreachBatch(lambda df, id: write_pg(df, "fact_tweets")).start()
 
-print(">>> ENGINE V5 (BANKING + NEW KEYWORDS) STARTED <<<")
+print(">>> ENGINE V6 (JAPANESE & TYPO FIX) STARTED <<<")
 spark.streams.awaitAnyTermination()
