@@ -83,7 +83,7 @@ docker compose exec kafka /opt/kafka/bin/kafka-topics.sh --create --topic custom
 ```
 
 
-### 5. Restore Dashboard Jadi 📊 (skip dulu karena dashboard belum ada)
+### 5. Restore Dashboard Jadi 📊  
 Agar kalian tidak perlu bikin grafik dari nol, restore konfigurasi dashboard yang sudah jadi:
 
 ```python
@@ -120,7 +120,7 @@ Login dengan kredensial berikut :
 Email: kelompok6@gmail.com 
 Password: kelompok6  
 
-Masuk ke Collection -> Our Analytics -> Buka Dashboard "Executive Market Pulse". (belum ada)
+Masuk ke Collection ->  Buka Collection "Dashboard Superstore vs Tweets"
 
 # ❓ Troubleshooting Common Issues
 Error: "tweets.csv not found" -> Cek langkah nomor 2. Pastikan nama file persis tweets.csv (huruf kecil semua).
