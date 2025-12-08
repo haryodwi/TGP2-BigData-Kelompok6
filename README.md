@@ -25,11 +25,14 @@ Sebelum memulai, pastikan laptop kalian sudah terinstall:
 ## 📥 Cara Install (Step-by-Step)
 
 ### 1. Clone Repository
-Buka terminal/PowerShell di folder tujuan, lalu jalankan:
+Buka terminal/PowerShell di FOLDER TUJUAN, lalu jalankan:
 
 ```python
 git clone https://github.com/haryodwi/TGP2-BigData-Kelompok6.git
 ```
+
+Kemudian masuk ke direktori "TGP2-BigData-Kelompok6" di termainal/PowerShell:
+
 ```python
 cd TGP2-BigData-Kelompok6
 ```
@@ -50,7 +53,7 @@ data/tweets.csv (Baru didownload)
  
 
 ### **3. Jalankan Container**
-Bangun dan nyalakan semua service (Kafka, Spark, Postgres, Metabase, MinIO):
+Bangun dan nyalakan semua service (Kafka, Spark, Postgres, Metabase, MinIO) melalui termainal/PowerShell, pastikan terminal sudah berada di dalam direktori "TGP2-BigData-Kelompok6":
 
 ```python
 docker compose up -d --build
