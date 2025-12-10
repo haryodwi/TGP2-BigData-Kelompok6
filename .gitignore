@@ -10,8 +10,5 @@ Thumbs.db
 venv/
 env/
 
-# Abaikan dataset raksasa
+# Abaikan dataset berukuran besar
 data/tweets.csv
-
-# PENTING: Jika data CSV bapak SANGAT BESAR (>100MB), 
-# Github akan menolak. Jika <100MB, biarkan saja (jangan tulis di sini).
