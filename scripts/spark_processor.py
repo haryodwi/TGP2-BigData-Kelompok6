@@ -217,8 +217,22 @@ def write_pg(df, table):
     except Exception as e:
         print(f"❌ [ERROR] Failed writing to {table}: {e}")
 
-q1 = clean_sales.writeStream.foreachBatch(lambda df, id: write_pg(df, "fact_sales")).start()
-q2 = clean_tweets.writeStream.foreachBatch(lambda df, id: write_pg(df, "fact_tweets")).start()
+# --- SEBELUMNYA (V8 - Belum ada checkpoint) ---
+# q1 = clean_sales.writeStream.foreachBatch(lambda df, id: write_pg(df, "fact_sales")).start()
+# q2 = clean_tweets.writeStream.foreachBatch(lambda df, id: write_pg(df, "fact_tweets")).start()
+
+# --- SESUDAHNYA (V9 - Checkpoint MinIO Aktif) ---
+# Kita simpan "bookmark" pembacaan di MinIO (s3a://lakehouse/...)
+
+q1 = clean_sales.writeStream \
+    .foreachBatch(lambda df, id: write_pg(df, "fact_sales")) \
+    .option("checkpointLocation", "s3a://lakehouse/checkpoints/sales") \
+    .start()
+
+q2 = clean_tweets.writeStream \
+    .foreachBatch(lambda df, id: write_pg(df, "fact_tweets")) \
+    .option("checkpointLocation", "s3a://lakehouse/checkpoints/tweets") \
+    .start()
 
 print(">>> ENGINE V8 (FINAL + DISCOUNT FIX) STARTED <<<")
 spark.streams.awaitAnyTermination()

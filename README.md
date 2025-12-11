@@ -1,4 +1,4 @@
-# 🚀 Real-time Big Data Analytics - Kelompok 6 (TGP2)
+# 🚀 Real-time Big Data Analytics - Kelompok 6 (TGP2) - Kappa Architecture
 
 Repository ini berisi source code untuk pipeline analisis data *real-time* menggunakan arsitektur **Modern Data Lakehouse**. Sistem ini menggabungkan data transaksi penjualan (Superstore) dan sentimen media sosial (Twitter) untuk menganalisis korelasi antara komplain pelanggan dan omzet penjualan.
 
