@@ -12,3 +12,6 @@ env/
 
 # Abaikan dataset berukuran besar
 data/tweets.csv
+
+# Abaikan producer_state.json
+data/producer_state.json

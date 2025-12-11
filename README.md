@@ -122,10 +122,14 @@ Password: kelompok6
 
 Masuk ke Collection ->  Buka Collection "Dashboard Superstore vs Tweets"
 
+
 # ❓ Troubleshooting Common Issues
-Error: "tweets.csv not found" -> Cek langkah nomor 2. Pastikan nama file persis tweets.csv (huruf kecil semua).
-Metabase kosong/tidak ada tabel? -> Masuk ke Admin Settings -> Databases -> Data Warehouse -> Klik "Sync database schema now".
-Container Spark mati sendiri (Exit 137)? -> RAM laptop penuh. Coba restart Docker Desktop atau naikkan alokasi RAM di settingan Docker ke 4GB.
+
+- Error: "tweets.csv not found" -> Cek langkah nomor 2. Pastikan nama file persis tweets.csv (huruf kecil semua).
+
+- Metabase kosong/tidak ada tabel? -> Masuk ke Admin Settings -> Databases -> Data Warehouse -> Klik "Sync database schema now".
+
+- Container Spark mati sendiri (Exit 137)? -> RAM laptop penuh. Coba restart Docker Desktop atau naikkan alokasi RAM di settingan Docker ke 4GB.
 
 
 
