@@ -185,8 +185,8 @@ sentiment_udf = udf(get_sentiment, FloatType())
 brand_udf = udf(get_brand_category, ArrayType(StringType()))
 
 # --- STREAMING ---
-df_sales = spark.readStream.format("kafka").option("kafka.bootstrap.servers", "kafka:9092").option("subscribe", "superstore_sales").option("startingOffsets", "earliest").option("maxRatePerPartition", "1").load()
-df_tweets = spark.readStream.format("kafka").option("kafka.bootstrap.servers", "kafka:9092").option("subscribe", "customer_tweets").option("startingOffsets", "earliest").option("maxRatePerPartition", "1").load()
+df_sales = spark.readStream.format("kafka").option("kafka.bootstrap.servers", "kafka:9092").option("subscribe", "superstore_sales").option("startingOffsets", "earliest").option("maxRatePerPartition", "10").load()
+df_tweets = spark.readStream.format("kafka").option("kafka.bootstrap.servers", "kafka:9092").option("subscribe", "customer_tweets").option("startingOffsets", "earliest").option("maxRatePerPartition", "10").load()
 
 # --- TRANSFORM ---
 # Skema Lengkap Sales (TERMASUK DISCOUNT)
